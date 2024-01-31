@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
 
-export default function App() {
+const App = () => {
   const [countries, setCountries] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetch("https://restcountries.com/v3.1/all")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => setCountries(data))
-      .catch((err) => console.error("Error fetching data: ", err));
+      .catch((err) => {
+        console.error("Error fetching data: ", err);
+        setError(err);
+      });
   }, []);
 
   const cardStyle = {
@@ -33,18 +42,26 @@ export default function App() {
     height: "100vh",
   };
 
+  if (error) {
+    return <div>Error fetching data: {error.message}</div>;
+  }
+
   return (
     <div style={containerStyle}>
       {countries.map((country) => (
         <div key={country.cca3} style={cardStyle}>
-          <img
-            src={country.flags.png}
-            alt={`Flag of ${country.name.common}`}
-            style={imageStyle}
-          />
+          {country.flags && country.flags.png && (
+            <img
+              src={country.flags.png}
+              alt={`Flag of ${country.name.common}`}
+              style={imageStyle}
+            />
+          )}
           <h2>{country.name.common}</h2>
         </div>
       ))}
     </div>
   );
-}
+};
+
+export default App;
